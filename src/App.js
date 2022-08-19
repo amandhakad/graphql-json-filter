@@ -52,8 +52,12 @@ function App() {
 		});
 	}
 
-	const handleInputChange = (e) => {
+	const handleJsonInputChange = (e) => {
 		setInput({...input, json: e.target.value });
+	}
+
+	const handleGraphqlInputChange = (e) => {
+		setInput({...input, graphql: e.target.value });
 	}
 
  	return (
@@ -69,11 +73,11 @@ function App() {
 				</ul>
 			</header>
 			<label htmlFor="jsoninput">Enter your json here:</label>
-			<textarea onChange={(e) => handleInputChange(e)} placeholder="Enter your json here:" cols="60" rows="10"
+			<textarea onChange={(e) => handleJsonInputChange(e)} placeholder="Enter your json here:" cols="60" rows="10"
 			 defaultValue={input.json} id="jsoninput"></textarea>
 			<br /><br />
 			<label htmlFor="graphqlinput">Enter your graphql query here (no arguments):</label>
-			<textarea placeholder="Enter your graphql query here (no arguments):" cols="60" rows="6" 
+			<textarea onChange={(e) => handleGraphqlInputChange(e)} placeholder="Enter your graphql query here (no arguments):" cols="60" rows="6" 
 			 defaultValue={input.graphql} id="graphqlinput"></textarea>
 			<br />
 			<button onClick={() => runQuery()}>Give the output</button>
