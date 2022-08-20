@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import './App.css';
-import { graphql, GraphQLSchema, GraphQLObjectType, GraphQLString, buildSchema } from 'graphql';
+import { graphql, buildSchema } from 'graphql';
 
+//we will update this lib if we find something that doesn't work
+import { jsonToSchema } from "@walmartlabs/json-to-simple-graphql-schema/lib";
 
 function App() {
 
@@ -12,41 +14,36 @@ function App() {
 		graphql: "{ hello, name }"
 	});
 
-	const generateSchema = () => {
-		const jsonObject = JSON.parse(input.json);
+	const generateSchema = (jsonObject) => {
+		// should we stringify object or directly take json instead
+		const generatedSchema = jsonToSchema({ jsonInput: JSON.stringify(jsonObject), baseType: 'Query' });
+		const schema = buildSchema(generatedSchema.value);
+		return schema;
+	}
 
-		//making just parentkeys for now, later have to add support for all hierarchy
-		let parentKeys = "";
-		let parentResolvers = {};
+	const generateResolvers = (jsonObject) => {
+		let resolvers = {};
 		for (let key in jsonObject) {
-			parentKeys += (key + ": String,\n");
-
 			let resolverFunction = () => {
 				return jsonObject[key];
 			}
-
-			parentResolvers[key] = resolverFunction;
+			resolvers[key] = resolverFunction;
 		}
-		console.log("parentResolvers", parentResolvers);
+		return resolvers;
+	}
 
-		const schema = buildSchema(`
-			type Query {
-		    	`+parentKeys+`
-			}
-		`);
-
-		let rootValue = {...parentResolvers};
-
+	const getGraphqlSchemaAndLoaders = () => {
+		const jsonObject = JSON.parse(input.json);
+		const schema = generateSchema(jsonObject);
+		const rootValue = generateResolvers(jsonObject);
 		return { schema: schema, rootValue: rootValue };
 	}
 
 	const runQuery = () => {
-		//build the schema dynamically
-		const {schema, rootValue} = generateSchema();
-
-		//run the graphql
+		const {schema, rootValue} = getGraphqlSchemaAndLoaders();
 		let source = input.graphql;
-
+		
+		//run graphql
 		graphql({ schema, source, rootValue }).then((result) => {
 			setOutput(result);
 		});
@@ -67,9 +64,8 @@ function App() {
 				<h3>Writing because could not find any on the internet surprisingly!</h3>
 				<p><b>To do list:</b></p>
 				<ul>
-					<li>all datatype supports</li>
-					<li>json infinite hierarchy support</li>
-					<li>Input json url support</li>
+					<li>Input json file and json url support</li>
+					<li>better ui</li>
 				</ul>
 			</header>
 			<label htmlFor="jsoninput">Enter your json here:</label>
